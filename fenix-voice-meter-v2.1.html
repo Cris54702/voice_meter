@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#041273"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png">
+<title>Fênix Voice Meter v2.1</title>
+<style>
+:root{--bg:#fff;--card:#eef1fb;--tx:#041273;--mut:#5b6385;--ok:#2ecc71;--wr:#f5b301;--bd:#ef4444;--ac:#d4a017;--q:#4b5563;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body.s1{--bg:#ffe066;--card:rgba(255,255,255,.55)}
+body.s2{--bg:#d92d20;--card:rgba(0,0,0,.25);--tx:#fff;--mut:#ffd9d4}
+body.s3{--bg:#d92d20;--card:rgba(0,0,0,.3);--tx:#fff;--mut:#f0dcff;animation:fl .7s steps(1) infinite}
+@keyframes fl{0%{background-color:#d92d20}50%{background-color:#6a1b9a}}
+*{box-sizing:border-box}html,body{overscroll-behavior-y:none}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{transition:background-color .35s;margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:480px;margin:0 auto;padding:16px}
+h1{font-size:15px;letter-spacing:.2em;text-align:center;margin:4px 0 4px;color:var(--tx)}
+.card{background:var(--card);border-radius:18px;padding:18px;margin-bottom:12px;text-align:center;transition:background .3s}
+.db{font-size:76px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.u{color:var(--mut);margin-top:2px}
+#st{font-size:20px;font-weight:700;margin:12px 0 4px}#msg{color:var(--mut);min-height:20px;font-size:14px}
+.bar{position:relative;height:14px;border-radius:7px;background:rgba(128,128,128,.25);margin:14px 0 4px;overflow:hidden}
+#fill{height:100%;width:0;background:var(--ok);transition:background .3s}
+.mk{position:absolute;top:0;bottom:0;width:2px;background:var(--tx)}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;padding:10px 4px;border:0;border-radius:12px;background:var(--card);color:var(--mut);font-size:13px}
+.tabs button.on{background:var(--ac);color:#041273}
+.go{width:100%;padding:16px;font-size:17px;font-weight:700;border:0;border-radius:14px;background:var(--ac);color:#041273;margin-bottom:12px}
+.g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.g div{background:var(--card);border-radius:12px;padding:10px 4px;text-align:center}
+.g b{display:block;font-size:20px;font-variant-numeric:tabular-nums}.g span{font-size:11px;color:var(--mut)}
+label{display:flex;justify-content:space-between;font-size:14px;margin:12px 0 4px;text-align:left}
+input[type=range]{width:100%;accent-color:var(--ac)}
+select{padding:8px;border-radius:10px;background:var(--card);color:var(--tx);border:1px solid var(--mut)}
+input[type=number],input[type=text]{padding:10px;border-radius:10px;border:1px solid var(--mut);background:transparent;color:var(--tx);font-size:16px}
+.cfg{text-align:left}.cfg input[type=number]{width:80px}
+.sm{padding:8px 12px;border:0;border-radius:10px;background:var(--ac);color:#041273}
+.note{font-size:12px;color:var(--mut);text-align:center;margin:8px 0}
+.lg{font-size:12px;color:var(--mut);display:flex;gap:14px;justify-content:center;margin-bottom:6px}
+#ch{width:100%;height:150px;display:block}
+#ov{position:fixed;inset:0;background:var(--bg);display:none;z-index:9;padding-top:env(safe-area-inset-top,0px)}
+body.stealth .panel{display:none}
+body.stealth #big{min-height:80vh;display:flex;flex-direction:column;justify-content:center}
+body.stealth #big .db,body.stealth #big .bar,body.stealth #big .u{display:none}
+</style></head><body>
+<div id="ov"><div class="w"><div class="card"><h1>BEM-VINDO</h1><p>Como devo chamar você?</p>
+<input type="text" id="ni" placeholder="Seu nome" maxlength="30" style="width:100%;margin-bottom:12px"><button class="go" id="ns">Continuar</button></div></div></div>
+<div class="w">
+<h1 class="panel">FÊNIX · VOICE METER <span id="ver" style="font-size:11px;letter-spacing:0;color:var(--mut);border:1px solid var(--mut);border-radius:8px;padding:1px 6px;vertical-align:middle"></span></h1>
+<p class="note panel">Olá, <b id="nm"></b> · <a href="#" id="chg" style="color:var(--tx);text-decoration:underline">trocar nome</a></p>
+<div class="tabs panel" id="tabs"><button data-m="voz">🗣️ Minha Voz</button><button data-m="amb">🏢 Ambiente</button><button data-m="trn">🎤 Treino</button></div>
+<div class="card" id="big" onclick="if(document.body.classList.contains('stealth'))toggleStealth()">
+<div class="db" id="db">--</div><div class="u" id="dbl">dB(A) estimado</div>
+<div id="st">⚪ PARADO</div><div id="msg">Toque em iniciar</div>
+<div class="bar"><div id="fill"></div><div class="mk" id="lim"></div><div class="mk" id="l1" style="background:var(--wr)"></div><div class="mk" id="l2" style="background:var(--bd)"></div></div>
+<div class="u" id="info"></div><div class="u" id="env" style="margin-top:6px"></div><div class="u" id="sim" style="margin-top:4px"></div></div>
+<button class="go panel" id="go">🎙 INICIAR</button>
+<div class="card panel"><div class="lg"><span style="color:#3b82f6">● Ambiente</span><span style="color:var(--tx);text-decoration:underline">● Voz</span><span>┄ Limite</span></div><canvas id="ch"></canvas>
+<div class="note">Últimos 60 s. A voz é separada do ruído pelas frequências da fala e pela detecção de tom; o ambiente é o nível de fundo estimado.</div></div>
+<div class="g panel"><div><b id="smin">--</b><span>Mínimo</span></div><div><b id="savg">--</b><span>Média (LAeq)</span></div><div><b id="smax">--</b><span>Máximo</span></div>
+<div><b id="sabv">0s</b><span>Tempo acima</span></div><div><b id="sflo">--</b><span>Ambiente</span></div><div><b id="sscr">--</b><span>Consistência</span></div></div>
+<div class="card panel" id="hist"><div style="font-weight:700;margin-bottom:8px">Histórico de sessões</div>
+<div id="hs" class="note"></div><canvas id="hc" style="width:100%;height:110px;display:block"></canvas>
+<div class="note">Cada barra = % do tempo de fala acima do limite naquele dia (últimos 14 dias).</div>
+<div id="hl" class="note" style="text-align:left"></div>
+<div style="display:flex;gap:8px;margin-top:8px"><button class="sm" id="hx">Exportar CSV</button><button class="sm" id="hd">Apagar histórico</button></div>
+<div class="note">Guarda só números de cada sessão (nunca áudio), neste navegador. Sessões com menos de 10 s não são salvas.</div></div>
+<div class="card cfg panel">
+<label>Tipo de limite <select id="lt"><option value="fix">Fixo</option><option value="rel">Relativo ao ambiente</option></select></label><div id="fx"><label>Limite <b id="vl"></b></label><input type="range" id="rl" min="40" max="120"></div><div id="rx"><label>Voz acima do ambiente <b id="vr"></b></label><input type="range" id="rr" min="3" max="25"></div>
+<label>Tolerância <b id="vt"></b></label><input type="range" id="rt" min="1" max="10">
+<label id="lb">Faixa-alvo (treino) <b id="vb"></b></label><input type="range" id="rb" min="4" max="20">
+<label>Vibrar ao alertar <input type="checkbox" id="cv"></label>
+<label>Sinais sonoros (3 bipes a 10% acima) <input type="checkbox" id="cs"></label>
+<label>Aviso falado com seu nome (a 15% acima) <input type="checkbox" id="cv2"></label>
+<label>Frase de aviso falada (use {nome})</label><input type="text" id="ph" maxlength="140" style="width:100%"><div style="display:flex;gap:8px;margin-top:8px"><button class="sm" id="pt">▶ Testar</button><button class="sm" id="pr">Restaurar padrão</button></div>
+<div style="margin-top:14px;font-weight:700">Minha voz</div>
+<div id="pst" class="note" style="text-align:left"></div>
+<div id="enbox" style="display:none;margin:8px 0;padding:12px;border-radius:12px;background:var(--bg);text-align:left"><b id="ent"></b><p id="enx" class="note" style="text-align:left"></p><div class="bar"><div id="enp" style="height:100%;width:0;background:var(--ok)"></div></div><button class="sm" id="enc">Cancelar</button></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="sm" id="enb">Cadastrar minha voz</button><button class="sm" id="edl">Apagar minha voz</button></div>
+<label>Considerar só a minha voz <input type="checkbox" id="om"></label>
+<label>Tolerância do reconhecimento <b id="vs"></b></label><input type="range" id="sn" min="12" max="40">
+<div class="note" style="text-align:left">Maior tolerância = aceita vozes mais parecidas com a sua. O perfil guarda só números (nunca áudio), fica só neste aparelho e não entra no backup nem vai para a internet.</div>
+<div style="margin-top:14px;font-weight:700">Calibração com decibelímetro</div>
+<div class="note" style="text-align:left">1) Inicie a medição. 2) Aproxime o celular do decibelímetro, com um som contínuo (ventilador, ruído ou um "aaa" sustentado). 3) Digite o valor do decibelímetro e toque em Capturar. Repita em 2 ou 3 volumes diferentes para mais precisão.</div>
+<div style="display:flex;gap:8px;align-items:center"><input type="number" id="ref" placeholder="dB oficial" step="0.1" style="flex:1"> <button class="sm" id="cap">Capturar ponto</button></div>
+<div id="pts" class="note" style="text-align:left"></div><div id="adj" class="note" style="text-align:left"></div>
+<button class="sm" id="clr">Apagar pontos</button>
+<div id="sto" class="note" style="text-align:left"></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="sm" id="rs">Restaurar padrão</button><button class="sm" id="ce">Exportar configurações</button><button class="sm" id="ci">Importar configurações</button></div><input type="file" id="cf" accept="application/json,.json" hidden>
+<div class="note" style="text-align:left">Avisos: 10% acima do limite = 3 sinais; 15% acima = chamada pelo nome. Percentuais calculados sobre o valor em dB do limite. Cores da tela: branco = adequado, amarelo = atenção, vermelho = acima do limite, roxo e vermelho alternando = mais de 10% acima.</div>
+</div>
+<button class="go panel" style="background:var(--card);color:var(--tx)" onclick="toggleStealth()">👁 Modo discreto</button>
+<p class="note panel">Fênix Voice Meter v2.1 · Áudio processado só neste aparelho; nunca é gravado nem enviado. As configurações ficam salvas só neste navegador (localStorage). O valor em dB é estimado: calibre com um medidor de referência. Vibração não funciona no iPhone.</p>
+</div>
+<script>
+const $=i=>document.getElementById(i);
+const VER='2.1';$('ver').textContent='v'+VER;
+const DEF='{nome}, o seu tom de voz está muito alto, reduza-o por favor!';
+let S={mode:'voz',limit:65,tol:3,band:8,cal:0,vib:true,snd:true,name:'',lt:'fix',rel:12,phrase:DEF,pts:[],voz:true,onlyMe:false,sens:2.5,prof:null};
+const KEY='fenix-voice-meter';
+try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||localStorage.getItem('fvm')||'{}'))}catch(e){}
+const mem={};
+function lget(k){try{const v=localStorage.getItem(k);if(v!==null)return v}catch(e){}return mem[k]??null}
+function lset(k,v){mem[k]=v;try{localStorage.setItem(k,v)}catch(e){}}
+function ldel(k){delete mem[k];try{localStorage.removeItem(k)}catch(e){}}
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('fenix-voice-meter-db',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function idbSet(k,v){try{const d=await idb();await new Promise((res,rej)=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch(e){}}
+async function idbDel(k){try{const d=await idb();await new Promise((res,rej)=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').delete(k);t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch(e){}}
+async function idbGet(k){try{const d=await idb();return await new Promise((res,rej)=>{const r=d.transaction('kv').objectStore('kv').get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}catch(e){return null}}
+function put(k,v){lset(k,v);idbSet(k,v)}
+async function del(k){ldel(k);await idbDel(k)}
+const save=()=>{S.savedAt=Date.now();put(KEY,JSON.stringify(S))};
+let L=S.limit;
+function fit(){const p=S.pts;if(!p.length)return{a:1,b:S.cal||0};
+ if(p.length===1)return{a:1,b:p[0].ref-p[0].raw};
+ const n=p.length,mx=p.reduce((t,q)=>t+q.raw,0)/n,my=p.reduce((t,q)=>t+q.ref,0)/n;let sxx=0,sxy=0;
+ p.forEach(q=>{sxx+=(q.raw-mx)**2;sxy+=(q.raw-mx)*(q.ref-my)});
+ if(sxx<25)return{a:1,b:my-mx};
+ const a=Math.min(1.5,Math.max(.5,sxy/sxx));return{a,b:my-a*mx}}
+let F=fit();const corr=r=>Math.max(10,F.a*r+F.b);
+let ctx,stream,an,buf,raf,run=false,lastT=0,sm=0,acc=0,hist=[],amb=[],vz=[],floor=35,st,overT=0,belowT=0,ep,wl=null,mute=0,nextSpeak=0,normT=0,curDb=0,rawNow=0,rawH=[],envN='';
+function reset(){st={min:999,max:0,sumE:0,t:0,above:0,voiceT:0,inBand:0,vt:0};hist=[];amb=[];vz=[];overT=0;belowT=0;ep={v:false,b:false};sm=0;rawH=[];$('env').textContent=''}
+reset();
+function ui(){
+ $('ph').value=S.phrase;$('om').checked=!!S.onlyMe;$('sn').value=Math.round(S.sens*10);$('vs').textContent=S.sens.toFixed(1);
+ $('pst').textContent=S.prof?'✔ Voz cadastrada em '+new Date(S.prof.at).toLocaleDateString('pt-BR')+' (3 volumes).':'Nenhuma voz cadastrada. Inicie a medição, fique 2 s em silêncio e toque em Cadastrar.';
+ $('pts').innerHTML=S.pts.length?S.pts.map((q,i)=>`Ponto ${i+1}: app ${q.raw.toFixed(1)} → oficial ${q.ref.toFixed(1)} dB`).join('<br>'):'Nenhum ponto capturado.';
+ $('adj').textContent=S.pts.length?(F.a===1?`Ajuste atual: ${F.b>=0?'+':''}${F.b.toFixed(1)} dB em toda a escala.`:`Ajuste atual: oficial ≈ ${F.a.toFixed(2)} × leitura ${F.b>=0?'+ ':'− '}${Math.abs(F.b).toFixed(1)}`):'Sem ajuste (leitura do microfone sem correção).';
+ $('rl').value=S.limit;$('lt').value=S.lt;$('rr').value=S.rel;$('vr').textContent='+'+S.rel+' dB';$('fx').style.display=S.lt==='rel'?'none':'block';$('rx').style.display=S.lt==='rel'?'block':'none';$('rt').value=S.tol;$('rb').value=S.band;$('cv').checked=S.vib;$('cs').checked=S.snd;$('cv2').checked=S.voz;$('nm').textContent=S.name;
+ $('vl').textContent=S.limit+' dB';$('vt').textContent=S.tol+' s';$('vb').textContent=S.band+' dB';
+ if(S.lt!=='rel')L=S.limit;mk();
+ $('lb').style.display=S.mode==='trn'?'flex':'none';
+ document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));
+ $('dbl').textContent=S.mode==='amb'?'dB(A) ambiente + voz':'dB(A) da voz estimado';
+}
+function askName(){$('ni').value=S.name;$('ov').style.display='block'}
+$('ns').onclick=()=>{const n=$('ni').value.trim();if(!n)return;S.name=n;save();$('ov').style.display='none';ui()};
+$('chg').onclick=e=>{e.preventDefault();askName()};
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{S.mode=b.dataset.m;save();reset();ui()});
+[['rl','limit'],['rt','tol'],['rb','band'],['rr','rel']].forEach(([i,k])=>$(i).oninput=e=>{S[k]=+e.target.value;save();ui()});
+$('cv').onchange=e=>{S.vib=e.target.checked;save()};$('lt').onchange=e=>{S.lt=e.target.value;save();ui()};
+$('ph').oninput=e=>{S.phrase=e.target.value;save()};$('pr').onclick=()=>{S.phrase=DEF;save();ui()};$('pt').onclick=()=>say();
+$('om').onchange=e=>{if(e.target.checked&&!S.prof){e.target.checked=false;return alert('Cadastre sua voz primeiro.')}S.onlyMe=e.target.checked;save()};
+$('sn').oninput=e=>{S.sens=+e.target.value/10;save();ui()};
+$('enb').onclick=enrStart;
+$('enc').onclick=()=>{enr=null;$('enbox').style.display='none'};
+$('edl').onclick=()=>{if(!S.prof)return;if(confirm('Apagar o perfil da sua voz deste aparelho?')){S.prof=null;S.onlyMe=false;dS=null;save();ui()}};
+$('rs').onclick=async()=>{if(confirm('Restaurar nome, limites e frase para o padrão? A calibração será MANTIDA (apague-a separadamente, se quiser).')){const k={pts:S.pts,cal:S.cal,savedAt:Date.now()};await del(KEY);ldel('fvm');put(KEY,JSON.stringify(k));location.reload()}};$('cs').onchange=e=>{S.snd=e.target.checked;save()};$('cv2').onchange=e=>{S.voz=e.target.checked;save()};
+$('cap').onclick=()=>{
+ const r=parseFloat($('ref').value);
+ if(!run||isNaN(r))return alert('Inicie a medição e digite o valor do decibelímetro.');
+ if(rawH.length<20)return alert('Aguarde 2 segundos de medição e tente de novo.');
+ const a=rawH.slice(-20),m=10*Math.log10(a.reduce((t,v)=>t+Math.pow(10,v/10),0)/a.length),sd=Math.sqrt(a.reduce((t,v)=>t+(v-m)**2,0)/a.length);
+ if(sd>3)return alert('O som está oscilando demais. Use um som contínuo e tente de novo.');
+ S.pts.push({raw:+m.toFixed(1),ref:r});if(S.pts.length>6)S.pts.shift();save();F=fit();$('ref').value='';ui()};
+$('clr').onclick=()=>{if(!S.pts.length&&!S.cal)return alert('Não há calibração para apagar.');if(!confirm('Apagar a calibração? O app volta a usar a leitura bruta do microfone, sem ajuste. Isso não pode ser desfeito.'))return;S.pts=[];S.cal=0;save();F=fit();ui()};
+function toggleStealth(){document.body.classList.toggle('stealth')}
+function beeps(){if(!S.snd)return;mute=performance.now()+1500;[0,.3,.6].forEach(t=>{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=880;g.gain.value=.25;o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.15)})}
+const txt=()=>(S.phrase.trim()||DEF).replace(/\{nome\}/gi,S.name||'');
+function say(){if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(txt());u.lang='pt-BR';mute=performance.now()+6000;u.onend=()=>{mute=performance.now()+700};speechSynthesis.cancel();speechSynthesis.speak(u)}
+function speak(){if(S.voz)say()}
+$('go').onclick=async()=>{
+ if(run){stop();return}
+ if(!S.name){askName();return}
+ try{
+  stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const src=ctx.createMediaStreamSource(stream);
+  const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=150;hp.Q.value=.7;
+  const pk=ctx.createBiquadFilter();pk.type='peaking';pk.frequency.value=2500;pk.Q.value=1;pk.gain.value=4;
+  const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=9000;
+  an=ctx.createAnalyser();an.fftSize=2048;an.smoothingTimeConstant=.4;buf=new Float32Array(an.fftSize);an2=ctx.createAnalyser();an2.fftSize=2048;
+  src.connect(hp);hp.connect(pk);pk.connect(lp);lp.connect(an);src.connect(an2);
+  if(window.speechSynthesis)speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+  sepInit();reset();run=true;lastT=performance.now();$('go').textContent='⏹ PARAR';
+  try{wl=await navigator.wakeLock.request('screen')}catch(e){}
+  raf=requestAnimationFrame(tick);
+ }catch(e){$('msg').textContent='Não foi possível acessar o microfone. Verifique a permissão.'}
+};
+function stop(){saveSession();enr=null;$('enbox').style.display='none';run=false;cancelAnimationFrame(raf);stream&&stream.getTracks().forEach(t=>t.stop());ctx&&ctx.close();try{wl&&wl.release()}catch(e){}
+ $('go').textContent='🎙 INICIAR';setBg(0);paint('q','⚪ PARADO','Medição encerrada')}
+/* separação voz × ruído por bandas de frequência + tom + perfil de voz */
+const SH=16;
+let an2,b2,fd,bi=[],NB=0,P=[],N=[],SEP={v:false,vdb:0,amb:35,frac:0,pc:0,f0:0,mine:false,sim:null},warmT=0,vHold=0,fr=0,ambS=null,dS=null,silT=0,enr=null;
+const EDG=[100,200,300,400,510,630,770,920,1080,1270,1480,1720,2000,2320,2700,3150,3700,4400,5300,6400,7700];
+function sepInit(){fd=new Float32Array(an.frequencyBinCount);b2=new Float32Array(2048);
+ const bw=ctx.sampleRate/an.fftSize;bi=EDG.map(f=>Math.max(1,Math.round(f/bw)));NB=EDG.length-1;
+ P=new Float64Array(NB);N=new Float64Array(NB);warmT=0;vHold=0;fr=0;ambS=null;dS=null;silT=0;SEP={v:false,vdb:0,amb:35,frac:0,pc:0,f0:0,mine:false,sim:null}}
+function pitchCorr(){
+ an2.getFloatTimeDomainData(b2);const n=1024;let e0=0;for(let i=0;i<n;i++)e0+=b2[i]*b2[i];
+ if(e0/n<1e-8)return[0,0];
+ const sr=ctx.sampleRate,lo=Math.floor(sr/400),hi=Math.min(Math.floor(sr/70),b2.length-n-1),cs=[];let best=0;
+ for(let l=lo;l<=hi;l+=2){let s=0,e1=0;for(let i=0;i<n;i++){const y=b2[i+l];s+=b2[i]*y;e1+=y*y}
+  const c=s/Math.sqrt(e0*e1+1e-20);cs.push(c);if(c>best)best=c}
+ let k=0;for(let i=1;i<cs.length-1;i++){if(cs[i]>=.9*best&&cs[i]>=cs[i-1]&&cs[i]>=cs[i+1]){k=i;break}}
+ return[best,sr/(lo+2*k)]}
+function dist(sh,f0,pr){let best=99;
+ pr.stages.forEach(g=>{let e=0;for(let b=0;b<SH;b++){const z=(sh[b]-g.sh[b])/pr.sd[b];e+=z*z}
+  const ds=Math.sqrt(e/SH),z=Math.abs(12*Math.log2(f0/g.f))/Math.max(g.sd*1.5,2.5),d=Math.sqrt(ds*ds+z*z);if(d<best)best=d});
+ return best}
+function feat(sh,f0){
+ if(enr){enr.cur.push({sh,f:f0});$('enp').style.width=Math.min(100,enr.cur.length)+'%';if(enr.cur.length>=100)enrNext();return}
+ if(!S.prof)return;
+ const d=dist(sh,f0,S.prof);dS=dS==null?d:dS+(d-dS)*.12}
+function sep(dt){
+ an.getFloatFrequencyData(fd);warmT+=dt;
+ let sP=0,vP=0,up=0;const g=Math.pow(10,(vHold>0?.03:.3)*dt);
+ for(let b=0;b<NB;b++){let p=0;for(let i=bi[b];i<bi[b+1];i++)p+=Math.pow(10,Math.max(fd[i],-140)/10);
+  P[b]=p;
+  if(warmT<2||N[b]===0)N[b]=N[b]===0?p:N[b]*.9+p*.1;
+  else N[b]=p<N[b]?N[b]*.6+p*.4:Math.min(p,N[b]*g);
+  if(b>=1&&b<=15&&p>N[b]*4)up++;
+  vP+=Math.max(p-N[b]*2,0);sP+=p}
+ const frac=sP>0?Math.min(1,vP/sP):0;
+ let newP=false;
+ if((fr++%3)===0){const r=pitchCorr();SEP.pc=r[0];SEP.f0=r[1];newP=true}
+ const voicedNow=warmT>=2&&SEP.pc>=.4&&up>=3&&frac>=.25;
+ vHold=voicedNow?.35:Math.max(0,vHold-dt);
+ if(vHold<=0){silT+=dt;if(silT>1.2)dS=null}else silT=0;
+ if(newP&&voicedNow&&SEP.pc>=.5&&SEP.f0>=75&&SEP.f0<=380){
+  const lb=[];let mu=0;for(let b=0;b<SH;b++){const v=10*Math.log10(Math.max(P[b]-2*N[b],P[b]*.05)+1e-30);lb.push(v);mu+=v}mu/=SH;
+  feat(lb.map(v=>v-mu),SEP.f0)}
+ const cv=x=>corr(Math.max(10,10*Math.log10(x+1e-12)+96));
+ const amb=cv(sm*(1-frac));
+ ambS=ambS===null?amb:ambS+(amb-ambS)*Math.min(1,dt/(vHold>0?6:1.5));
+ const vr=cv(sm*Math.max(frac,.02));
+ SEP.vdb=vHold>0?Math.max(vr,SEP.vdb-12*dt):vr;
+ SEP.v=vHold>0;SEP.amb=ambS;SEP.frac=frac;
+ SEP.mine=vHold>0&&dS!=null&&dS<=S.sens;SEP.sim=dS==null?null:Math.round(100*Math.exp(-.69*Math.pow(dS/S.sens,2)))}
+const STG=[['voz NORMAL, como numa conversa','Leia: "O rato roeu a roupa do rei de Roma, e a rainha riu do ratinho."'],['voz MAIS ALTA, como num lugar barulhento','Leia de novo, mais alto: "O rato roeu a roupa do rei de Roma, e a rainha riu do ratinho."'],['voz BEM ALTA (sem gritar)','Mais uma vez, bem alto: "O rato roeu a roupa do rei de Roma, e a rainha riu do ratinho."']];
+function enrStart(){if(!run)return alert('Inicie a medição e fique 2 s em silêncio antes de cadastrar.');if(warmT<2)return alert('Aguarde a medição do ambiente (2 s).');enr={i:0,cur:[],st:[]};enrShow()}
+function enrShow(){$('enbox').style.display='block';$('ent').textContent=`Etapa ${enr.i+1} de 3 — fale em ${STG[enr.i][0]}`;$('enx').textContent=STG[enr.i][1];$('enp').style.width='0'}
+function enrNext(){enr.st.push(enr.cur);enr.cur=[];enr.i++;if(enr.i<3){enrShow();return}
+ const mn=a=>a.reduce((t,v)=>t+v,0)/a.length;
+ const stages=enr.st.map(fr=>{const sh=[...Array(SH)].map((_,b)=>mn(fr.map(q=>q.sh[b])));const fs=fr.map(q=>12*Math.log2(q.f)),fm=mn(fs),sd=Math.sqrt(mn(fs.map(v=>(v-fm)**2)));return{sh,f:Math.pow(2,fm/12),sd}});
+ const sd=[...Array(SH)].map((_,b)=>{const o=[];enr.st.forEach((fr,k)=>fr.forEach(q=>o.push(q.sh[b]-stages[k].sh[b])));const m=mn(o);return Math.max(Math.sqrt(mn(o.map(v=>(v-m)**2))),2.5)});
+ S.prof={stages,sd,at:Date.now()};save();enr=null;$('enbox').style.display='none';dS=null;ui();alert('Voz cadastrada.')}
+
+function tick(now){
+ if(!run)return;raf=requestAnimationFrame(tick);
+ const dt=Math.min((now-lastT)/1000,.2);lastT=now;
+ an.getFloatTimeDomainData(buf);let s=0;for(let i=0;i<buf.length;i++)s+=buf[i]*buf[i];
+ sm+=(s/buf.length-sm)*Math.min(1,dt*8);
+ rawNow=Math.max(10,10*Math.log10(sm+1e-12)+96);curDb=corr(rawNow);
+ sep(dt);step(curDb,dt);
+}
+function step(db,dt){
+ const now=performance.now(),ign=now<mute;
+ const mineOk=!S.onlyMe||!S.prof||SEP.mine,voice=!ign&&SEP.v&&mineOk,vdb=voice?SEP.vdb:null;
+ acc+=dt;
+ if(acc>.1){acc=0;hist.push(db);if(hist.length>600)hist.shift();rawH.push(rawNow);if(rawH.length>30)rawH.shift();
+  floor=SEP.amb;
+  amb.push(floor);vz.push(vdb);if(amb.length>600){amb.shift();vz.shift()}draw()}
+ L=S.lt==='rel'?Math.max(40,Math.min(120,floor+S.rel)):S.limit;mk();env();
+ const lvl=S.mode==='amb'?db:(voice?vdb:db);
+ st.t+=dt;
+ if(st.t>1){st.min=Math.min(st.min,db);st.max=Math.max(st.max,db);st.sumE+=Math.pow(10,db/10)*dt}
+ const relevant=S.mode==='amb'||voice;
+ const over=!ign&&relevant&&lvl>L;
+ if(!ign){
+  if(voice)st.vt+=dt;
+  if(over){st.above+=dt;overT+=dt;belowT=0}else{overT=0;belowT+=dt}
+  if(S.mode==='trn'&&voice){st.voiceT+=dt;if(lvl<=L&&lvl>=L-S.band)st.inBand+=dt}
+  if(overT>=S.tol){
+   if(!ep.v){ep.v=true;if(S.vib&&navigator.vibrate)navigator.vibrate([200,100,200])}
+   if(lvl>L*1.15&&S.voz){if(now>nextSpeak){speak();nextSpeak=now+10000;ep.b=true}}
+   else if(lvl>L*1.10&&!ep.b){beeps();ep.b=true}
+  }
+  if(belowT>=2&&ep.v){ep.v=false;ep.b=false;normT=now+3000}
+ }
+ let c,t,m;
+ if(warmT<2){c='q';t='⚪ MEDINDO AMBIENTE';m='Fique em silêncio por 2 segundos'}
+ else if(ep.v){c='bd';t='🔴 ACIMA DO LIMITE';m=lvl>L*1.15?txt():'REDUZA UM POUCO O VOLUME'}
+ else if(over){c='wr';t='🟡 ATENÇÃO';m=`Acima do limite há ${overT.toFixed(1)} s`}
+ else if(S.mode==='trn'&&voice&&lvl<L-S.band){c='wr';t='🟡 MUITO BAIXO';m='Aumente um pouco para entrar na faixa'}
+ else if(!relevant){c='q';const oth=SEP.v&&S.onlyMe&&S.prof&&!SEP.mine;t=oth?'⚪ OUTRA VOZ':'⚪ SEM VOZ';m=oth?'Ignorada: não parece a sua voz':'Aguardando você falar'}
+ else{c='ok';t='🟢 ADEQUADO';m=now<normT?'VOLUME NORMALIZADO':'Volume dentro do esperado'}
+ const lv=ep.v?(lvl>L*1.10?3:2):(c==='wr'||(relevant&&lvl>=L-3))?1:0;setBg(lv);
+ paint(c,t,m,lvl);
+ $('sim').textContent=(S.prof&&SEP.v&&SEP.sim!=null)?`Parecido com a sua voz: ${SEP.sim}%${S.onlyMe&&!SEP.mine?' · ignorada':''}`:'';
+ $('smin').textContent=st.min<999?st.min.toFixed(0):'--';
+ $('smax').textContent=st.max?st.max.toFixed(0):'--';
+ $('savg').textContent=st.t>1?(10*Math.log10(st.sumE/st.t)).toFixed(0):'--';
+ $('sabv').textContent=Math.round(st.above)+'s';
+ $('sflo').textContent=floor.toFixed(0);
+ $('sscr').textContent=S.mode==='trn'&&st.voiceT>2?Math.round(st.inBand/st.voiceT*100)+'%':'--';
+}
+function paint(c,t,m,db){
+ const col={ok:'--ok',wr:'--wr',bd:'--bd',q:'--q'}[c];
+ $('st').textContent=t;$('msg').textContent=m;
+  $('fill').style.background=`var(${col})`;
+ if(db!==undefined){$('db').textContent=db.toFixed(1);$('fill').style.width=Math.max(0,Math.min(100,(db-30)/90*100))+'%'}
+}
+function draw(){
+ const c=$('ch'),r=devicePixelRatio||1,w=c.width=c.clientWidth*r,h=c.height=c.clientHeight*r,x=c.getContext('2d'),cs=getComputedStyle(document.documentElement);
+ const Y=v=>h-(Math.min(120,Math.max(30,v))-30)/90*h;
+ x.setLineDash([6*r,6*r]);x.strokeStyle=cs.getPropertyValue('--mut');x.lineWidth=r;x.beginPath();x.moveTo(0,Y(L));x.lineTo(w,Y(L));x.stroke();x.setLineDash([]);x.lineWidth=2*r;
+ [[amb,'#3b82f6'],[vz,cs.getPropertyValue('--ac').trim()]].forEach(([a,col])=>{x.strokeStyle=col;x.beginPath();let pen=false;
+  a.forEach((v,i)=>{if(v==null){pen=false;return}const px=w-(a.length-1-i)/599*w;pen?x.lineTo(px,Y(v)):x.moveTo(px,Y(v));pen=true});x.stroke()});
+}
+const BG=['#ffffff','#ffe066','#d92d20','#6a1b9a'];
+function setBg(l){const b=document.body;for(let i=0;i<4;i++)b.classList.toggle('s'+i,i===l);const m=document.querySelector('meta[name=theme-color]');if(m)m.content=BG[l]}
+function mk(){const p=v=>((Math.min(120,Math.max(30,v))-30)/90*100)+'%';$('lim').style.left=p(L);$('l1').style.left=p(L*1.1);$('l2').style.left=p(L*1.15);
+ $('info').textContent=S.mode==='trn'?`Faixa-alvo: ${Math.round(L-S.band)}–${Math.round(L)} dB(A)`:S.lt==='rel'?`Limite automático: ${Math.round(L)} dB(A) (ambiente + ${S.rel})`:`Seu limite: ${Math.round(L)} dB(A)`}
+function env(){
+ if(amb.length<30){$('env').textContent='';return}
+ const a=[...amb].sort((x,y)=>x-y),q=k=>a[Math.floor((a.length-1)*k)],f=q(.5),v=q(.9)-q(.1);
+ const n=f<40?'🤫 Muito silencioso (quarto, biblioteca)':f<50?'🏠 Silencioso (casa, sala calma)':f<60?'🏢 Escritório ou casa com movimento':f<70?'🛍️ Comércio, restaurante ou rua':f<80?'🚌 Transporte público, bar ou trânsito intenso':f<90?'🎉 Festa ou bar com música alta':'⚠️ Barulho muito alto (balada, show)';
+ envN=n;$('env').textContent=`Ambiente provável: ${n}${v>10?' · com variações':''}${f>=85?' · proteja a audição':''}`}
+let pers=null;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().then(g=>{pers=g;stoStatus()})}catch(e){}
+const HK='fenix-voice-meter-hist';
+function hget(){try{return JSON.parse(lget(HK)||'[]')}catch(e){return[]}}
+function saveSession(){
+ if(!run||st.t<10)return;
+ const den=S.mode==='amb'?st.t:st.vt,h=hget();
+ h.push({ts:Date.now(),dur:Math.round(st.t),m:S.mode,lim:Math.round(L),ab:Math.round(st.above),vt:Math.round(st.vt),pa:den>3?Math.round(st.above/den*100):null,sc:S.mode==='trn'&&st.voiceT>2?Math.round(st.inBand/st.voiceT*100):null,avg:st.t>1?Math.round(10*Math.log10(st.sumE/st.t)):null,max:Math.round(st.max),fl:Math.round(floor),env:envN});
+ while(h.length>300)h.shift();
+ put(HK,JSON.stringify(h))
+ renderHist()}
+function renderHist(){
+ const h=hget(),md={voz:'Minha Voz',amb:'Ambiente',trn:'Treino'};
+ $('hl').innerHTML=h.length?h.slice(-8).reverse().map(r=>{const d=new Date(r.ts);return `${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${Math.max(1,Math.round(r.dur/60))} min · ${md[r.m]} · ${r.pa==null?'sem fala':r.pa+'% acima'}${r.sc!=null?' · consistência '+r.sc+'%':''}`}).join('<br>'):'Nenhuma sessão ainda. Inicie e pare uma medição de pelo menos 10 s.';
+ const wk=(a,b)=>{const x=h.filter(r=>r.m!=='amb'&&r.vt>0&&r.ts>=Date.now()-b*864e5&&r.ts<Date.now()-a*864e5),w=x.reduce((t,r)=>t+r.vt,0);return w>=20?Math.round(x.reduce((t,r)=>t+r.ab,0)/w*100):null};
+ const c=wk(0,7),p=wk(7,14);
+ $('hs').textContent=c==null?'Ainda sem dados de fala suficientes nos últimos 7 dias.':`Últimos 7 dias: ${c}% do tempo de fala acima do limite`+(p==null?'.':` (semana anterior: ${p}%) ${c<p?'▼ melhorou':c>p?'▲ piorou':'= igual'}`);
+ drawHist(h)}
+function drawHist(h){
+ const c=$('hc'),r=devicePixelRatio||1,w=c.width=c.clientWidth*r,ht=c.height=c.clientHeight*r,x=c.getContext('2d'),cs=getComputedStyle(document.documentElement);
+ const bw=w/14;x.font=`${10*r}px system-ui`;x.textAlign='center';
+ for(let i=0;i<14;i++){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(13-i));
+  const t0=d.getTime(),rs=h.filter(q=>q.m!=='amb'&&q.vt>0&&q.ts>=t0&&q.ts<t0+864e5),vt=rs.reduce((t,q)=>t+q.vt,0);
+  x.fillStyle=cs.getPropertyValue('--mut');x.fillText(d.getDate(),bw*i+bw/2,ht-2*r);
+  if(vt>=5){const pa=Math.min(1,rs.reduce((t,q)=>t+q.ab,0)/vt),bh=Math.max(2*r,pa*(ht-18*r));x.fillStyle=cs.getPropertyValue('--ac').trim();x.fillRect(bw*i+bw*.2,ht-14*r-bh,bw*.6,bh)}}}
+$('hd').onclick=async()=>{if(confirm('Apagar todo o histórico de sessões deste aparelho?')){await del(HK);renderHist()}};
+$('hx').onclick=()=>{const h=hget();if(!h.length)return alert('Ainda não há sessões salvas.');
+ const c='data;duracao_s;modo;limite_dB;tempo_acima_s;tempo_fala_s;pct_acima;consistencia;media_dB;max_dB;ambiente_dB;ambiente\n'+h.map(r=>[new Date(r.ts).toLocaleString('pt-BR'),r.dur,r.m,r.lim,r.ab,r.vt,r.pa??'',r.sc??'',r.avg??'',r.max,r.fl,'"'+(r.env||'')+'"'].join(';')).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+c],{type:'text/csv'}));a.download='fenix-voice-meter-historico.csv';a.click()};
+addEventListener('pagehide',saveSession);
+function stoStatus(){let ok=false;try{localStorage.setItem('__t','1');ok=localStorage.getItem('__t')==='1';localStorage.removeItem('__t')}catch(e){}
+ $('sto').textContent=!ok?'⚠ Este navegador não permite guardar dados. Abra por https/localhost ou instale como PWA.':location.protocol==='file:'?'⚠ Arquivo aberto direto do aparelho (file://): o armazenamento pode se perder. Prefira abrir por https ou localhost e instalar como PWA.':'💾 Configurações e calibração guardadas neste aparelho'+(pers?' (protegidas contra limpeza automática).':'.')}
+async function restore(){let ch=false;
+ try{const a=await idbGet(KEY);if(a){const o=JSON.parse(a),cur=lget(KEY),c=cur?JSON.parse(cur):null;if(!c||(o.savedAt||0)>(c.savedAt||0)){Object.assign(S,o);lset(KEY,a);ch=true}}}catch(e){}
+ try{const a=await idbGet(HK);if(a){const o=JSON.parse(a),c=JSON.parse(lget(HK)||'[]');if(o.length>c.length){lset(HK,a);ch=true}}}catch(e){}
+ if(ch){F=fit();if(S.name)$('ov').style.display='none';ui();renderHist()}}
+$('ce').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({...S,prof:undefined},null,1)],{type:'application/json'}));a.download='fenix-voice-meter-configuracoes.json';a.click()};
+$('ci').onclick=()=>$('cf').click();
+$('cf').onchange=async e=>{const f=e.target.files[0];if(!f)return;
+ try{const o=JSON.parse(await f.text()),ok=['mode','limit','tol','band','cal','vib','snd','name','lt','rel','phrase','pts','voz','onlyMe','sens'],n={};
+  ok.forEach(k=>{if(k in o&&typeof o[k]===typeof S[k])n[k]=o[k]});
+  if(Array.isArray(n.pts))n.pts=n.pts.filter(q=>q&&Number.isFinite(q.raw)&&Number.isFinite(q.ref)).slice(-6);
+  if(!confirm('Importar estas configurações e calibração? As atuais serão substituídas.'))return;
+  Object.assign(S,n);save();F=fit();ui();alert('Configurações importadas.')}catch(x){alert('Arquivo inválido.')}e.target.value=''};
+/* blindagem: a medição só para quando o usuário mandar */
+let ty=0;
+addEventListener('touchstart',e=>{ty=e.touches[0].clientY},{passive:true});
+addEventListener('touchmove',e=>{if(!run||window.scrollY>0||!e.cancelable||e.touches[0].clientY<=ty)return;
+ if(e.target.closest&&e.target.closest('input,select,textarea,button'))return;e.preventDefault()},{passive:false});
+addEventListener('beforeunload',e=>{if(run){e.preventDefault();e.returnValue=''}});
+document.addEventListener('visibilitychange',async()=>{if(!run||document.hidden)return;
+ try{wl=await navigator.wakeLock.request('screen')}catch(e){}
+ try{if(ctx&&ctx.state==='suspended')await ctx.resume()}catch(e){}});
+if(!S.name)askName();ui();draw();renderHist();stoStatus();restore().then(stoStatus);
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
